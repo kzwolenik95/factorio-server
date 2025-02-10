@@ -1,0 +1,42 @@
+- name: Create factorio user
+  ansible.builtin.user:
+    name: factorio
+    state: present
+    append: true
+    create_home: true
+
+- name: Add ssh keys
+  ansible.posix.authorized_key:
+    user: factorio
+    state: present
+    key: "{{ ssh_pub_keys | split(',') | join('\n') }}"
+
+- name: Add user to factorio group
+  ansible.builtin.user:
+    name: fedora
+    groups: factorio
+    append: true
+
+- name: Change user and group to factorio for saves directory
+  ansible.builtin.file:
+    path: /mnt/factorio_saves/
+    owner: factorio
+    group: factorio
+    recurse: true
+  # ansible.builtin.command: "chown -vR factorio:factorio /mnt/factorio_saves/ | grep 'changed ownership' || true"
+  # register: chown_result
+  # changed_when: chown_result.stdout != ""
+
+- name: Install factorio
+  ansible.builtin.shell: |
+    set -o pipefail
+    url=$(curl -s -L -w "%{url_effective}" "https://factorio.com/get-download/stable/headless/linux64" -o /dev/null)
+    filename=$(basename "$url" | sed 's/\?.*//')
+
+    curl -L -o "$filename" "https://factorio.com/get-download/stable/headless/linux64"
+    tar -xvf "$filename"
+    rm "$filename"
+    chown -R factorio:factorio /opt/factorio
+  args:
+    creates: factorio
+    chdir: /opt/

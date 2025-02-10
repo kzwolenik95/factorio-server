@@ -1,0 +1,27 @@
+- name: Install python3-libdnf5 if missing
+  ansible.builtin.dnf:
+    use_backend: dnf4
+    name: python3-libdnf5
+    state: present
+
+- name: Create fedora user
+  ansible.builtin.user:
+    name: fedora
+    state: present
+    groups: wheel
+    append: true
+    create_home: true
+
+- name: Make users passwordless for sudo in group wheel
+  ansible.builtin.lineinfile:
+    path: /etc/sudoers
+    state: present
+    regexp: "^%wheel"
+    line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+    validate: "visudo -cf %s"
+
+- name: Add ssh keys
+  ansible.posix.authorized_key:
+    user: fedora
+    state: present
+    key: "{{ ssh_pub_keys | split(',') | join('\n') }}"

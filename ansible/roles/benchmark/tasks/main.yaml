@@ -1,0 +1,57 @@
+- name: Install python3-libdnf5 if missing
+  ansible.builtin.dnf:
+    use_backend: dnf4
+    name: python3-libdnf5
+    state: present
+
+- name: Install factorio
+  ansible.builtin.shell: |
+    set -o pipefail
+    url=$(curl -s -L -w "%{url_effective}" "https://factorio.com/get-download/stable/headless/linux64" -o /dev/null)
+    filename=$(basename "$url" | sed 's/\?.*//')
+
+    curl -L -o "$filename" "https://factorio.com/get-download/stable/headless/linux64"
+
+    tar -xvf "$filename"
+  args:
+    creates: factorio
+
+- name: Copy benchmark script
+  ansible.builtin.copy:
+    src: files/benchmark.sh
+    dest: "{{ ansible_facts.user_dir }}/factorio"
+    owner: root
+    group: root
+    mode: "0774"
+
+- name: Install benchamrk dependencies
+  ansible.builtin.dnf:
+    name: lshw
+    state: present
+
+- name: Execute benchmark script
+  ansible.builtin.command: ./benchmark.sh
+  args:
+    chdir: "{{ ansible_facts.user_dir }}/factorio"
+  register: benchmark_output
+  changed_when: true
+
+- name: Extract UPS value
+  ansible.builtin.set_fact:
+    factorio_ups: "{{ benchmark_output.stdout_lines | select('search', 'Map benchmarked at') | first | regex_search('(\\d+\\.\\d+)') }}"
+
+- name: Print UPS value
+  ansible.builtin.debug:
+    msg: "Factorio UPS: {{ factorio_ups }}"
+
+- name: Copy output to file
+  ansible.builtin.copy:
+    dest: output{{ ansible_date_time.epoch }}.txt
+    content: |-
+      {% for host in ansible_play_hosts_all %}
+      {{ '###' }}{{ hostvars[host]['do_size']['slug'] }}{{ '###' }}
+      {{ hostvars[host]['factorio_ups'] }}
+      {% endfor %}
+    mode: "0664"
+  delegate_to: localhost
+  run_once: true # noqa: run-once[task]

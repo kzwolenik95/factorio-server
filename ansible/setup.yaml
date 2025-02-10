@@ -1,0 +1,12 @@
+- name: Deploy
+  hosts: all
+  remote_user: root
+  vars:
+    ssh_pub_keys: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPWmPEaKpFut7nqMizWgl703oJGYFNKqIseDvonpD+LSNZ1OXF0qMljoMHXKfEj8221YGHhXJ7Tzqssn5+ywCNz/s7x00uRjB5VobIntZ6lgYTrlUfmJkksaYaNb3DD1lZAFxYd5h/8ksJKK7MiGBTXXrF9A4TwBwgHleEpyx0wfCcj7JTWBzJ2wTqxeL0UWdDLdNcFFYzJdcQYJxJXsEa49o+3AeYAvVQeLEyxjcRgYWC25nRiAYtJLq8Xk7dvq5WjIeBRDUrM+Yyd3Yhh3snRDbkGxHjUvvZG1PdNSV86iWVZtLUpvOJGj57Wn1hidg/M66fpz9Wo7VHBUPvqCX3"
+  roles:
+    - role: base
+      tags: [base]
+    - role: factorio
+      tags: [factorio]
+    - role: factorio_server
+      tags: [factorio_server]

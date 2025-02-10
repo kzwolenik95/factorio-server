@@ -1,0 +1,32 @@
+- name: Create factorio service unit
+  ansible.builtin.template:
+    src: templates/factorio-service.j2
+    dest: /etc/systemd/system/factorio.service
+    owner: factorio
+    group: factorio
+    mode: "0644"
+  vars:
+    save_path: "/mnt/factorio_saves/save.zip"
+
+- name: Create mods directory
+  ansible.builtin.file:
+    path: /opt/factorio/mods/
+    state: directory
+    mode: "0755"
+    owner: factorio
+    group: factorio
+
+- name: Copy mods config
+  ansible.builtin.copy:
+    src: files/mod-list.json
+    dest: /opt/factorio/mods/mod-list.json
+    mode: "0644"
+    owner: factorio
+    group: factorio
+
+- name: Reload daemon and start the new service
+  ansible.builtin.systemd:
+    name: factorio.service
+    state: started
+    enabled: true
+    daemon_reload: true
