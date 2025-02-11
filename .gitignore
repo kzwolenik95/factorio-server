@@ -38,3 +38,7 @@ terraform.rc
 
 # Ignore tmp files
 *.tmp
+
+# Ignore .vscode
+
+.vscode
