@@ -15,6 +15,7 @@ jobs:
   destroy-terraform:
     runs-on: ubuntu-latest
     env:
+      TF_FORCE_LOCAL_BACKEND: 1
       TF_VAR_ssh_key_name: ${{ vars.SSH_KEY_NAME }}
       TF_VAR_size: ${{ vars.SIZE }}
       TF_VAR_name: ${{ vars.NAME }}
@@ -27,7 +28,7 @@ jobs:
       TF_TOKEN_app_terraform_io: ${{ secrets.HCP_TERRAFORM_TOKEN }}
     defaults:
       run:
-        working-directory: terraform
+        working-directory: terraform-infra/game_server
     steps:
       - name: Check Confirmation Input
         run: |

@@ -11,6 +11,7 @@ jobs:
   terraform:
     runs-on: ubuntu-latest
     env:
+      TF_FORCE_LOCAL_BACKEND: 1
       TF_VAR_ssh_key_name: ${{ vars.SSH_KEY_NAME }}
       TF_VAR_size: ${{ vars.SIZE }}
       TF_VAR_name: ${{ vars.NAME }}
@@ -23,10 +24,27 @@ jobs:
       TF_TOKEN_app_terraform_io: ${{ secrets.HCP_TERRAFORM_TOKEN }}
     defaults:
       run:
-        working-directory: terraform
+        working-directory: terraform-infra/game_server
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Install doctl
+        uses: digitalocean/action-doctl@v2
+        with:
+          token: ${{ secrets.DIGITALOCEAN_API_TOKEN }}
+
+      - name: Public IP
+        id: ip
+        uses: haythem/public-ip@v1.3
+
+      - name: Whitelist runner Ip
+        id: whitelist-ip
+        run: |
+          doctl compute firewall create \
+            --name "factorio-whitelist-runner" \
+            --inbound-rules "protocol:tcp,ports:22,address:${{ steps.ip.outputs.ipv4 }}/32" \
+            --tag-names "factorio"
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
@@ -52,3 +70,9 @@ jobs:
           options: |
             --inventory inventory_digitalocean.yaml
             --extra-vars ssh_pub_keys: ${{ vars.SSH_PUB_KEYS }}
+
+      - name: Un-whitelist runner Ip
+        if: ${{ always() && steps.whitelist-ip.outcome == 'success' }}
+        run: |
+          doctl compute firewall delete -f \
+            $(doctl compute firewall list --format ID,Name --output json | jq -r '.[] | select(.name == "factorio-whitelist-runner") | .id')

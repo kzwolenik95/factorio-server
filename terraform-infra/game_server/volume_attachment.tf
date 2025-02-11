@@ -1,18 +1,17 @@
-resource "digitalocean_volume" "factorio_saves" {
-  name                     = "factorio-saves"
-  size                     = 1
-  # initial_filesystem_type  = "ext4"
-  # initial_filesystem_label = "factorio-saves"
-  region                   = "fra1"
+data "terraform_remote_state" "factorio_volume" {
+  backend = "remote"
 
-
-  lifecycle {
-    prevent_destroy = true
+  config = {
+    organization = "factorio-kzwolenik"
+    workspaces = {
+      name = "factorio-volume"
+    }
   }
 }
+
 resource "digitalocean_volume_attachment" "factorio_vol_attachment" {
   droplet_id = digitalocean_droplet.fedora.id
-  volume_id  = digitalocean_volume.factorio_saves.id
+  volume_id  = data.terraform_remote_state.factorio_volume.outputs.volume_id
 
   provisioner "remote-exec" {
     connection {

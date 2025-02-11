@@ -1,6 +1,6 @@
 terraform {
   cloud {
-    organization = "roadmap-sh"
+    organization = "factorio-kzwolenik"
     hostname     = "app.terraform.io"
 
     workspaces {
