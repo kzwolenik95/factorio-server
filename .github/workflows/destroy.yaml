@@ -1,4 +1,4 @@
-name: Manual destroy pipeline
+name: Destroy the server
 
 on:
   workflow_dispatch:

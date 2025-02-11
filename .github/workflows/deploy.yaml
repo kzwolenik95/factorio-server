@@ -1,4 +1,4 @@
-name: Manual deploy pipeline
+name: Provision the server
 
 on:
   workflow_dispatch:
@@ -66,7 +66,7 @@ jobs:
         with:
           playbook: setup.yaml
           directory: ansible
-          key: $${{ secrets.SSH_PRIV_KEY }}
+          key: ${{ secrets.SSH_PRIV_KEY }}
           options: |
             --inventory inventory_digitalocean.yaml
             --extra-vars "ssh_pub_keys=${{ vars.SSH_PUB_KEYS }}"
